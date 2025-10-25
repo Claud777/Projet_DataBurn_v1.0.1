@@ -1,0 +1,34 @@
+Resumo da Análise de Queimadas no Maranhão
+==================================================
+
+                   DataHora  Satelite    Pais  ...         FRP    Latitude   Longitude
+count                   515       515     515  ...  515.000000  515.000000  515.000000
+unique                    9         1       1  ...         NaN         NaN         NaN
+top     2025/10/25 18:13:00  AQUA_M-T  Brasil  ...         NaN         NaN         NaN
+freq                    232       515     515  ...         NaN         NaN         NaN
+mean                    NaN       NaN     NaN  ...   39.326019   -5.459486  -45.485017
+std                     NaN       NaN     NaN  ...   63.517239    1.623618    1.399248
+min                     NaN       NaN     NaN  ...    4.500000   -9.518880  -48.020800
+25%                     NaN       NaN     NaN  ...   12.200000   -6.877990  -46.662025
+50%                     NaN       NaN     NaN  ...   20.000000   -5.164840  -45.771970
+75%                     NaN       NaN     NaN  ...   38.500000   -4.205345  -44.243525
+max                     NaN       NaN     NaN  ...  957.500000   -1.302910  -42.004060
+
+[11 rows x 12 columns]
+
+Valores nulos por coluna:
+DataHora          0
+Satelite          0
+Pais              0
+Estado            0
+Municipio         0
+Bioma             0
+DiaSemChuva     247
+Precipitacao    247
+RiscoFogo       247
+FRP               0
+Latitude          0
+Longitude         0
+dtype: int64
+
+Top 10 municípios com mais queimadas:

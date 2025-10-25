@@ -11,11 +11,11 @@ import os
 sns.set(style="whitegrid", palette="Set2")
 
 # Caminho do arquivo CSV
-CAMINHO_CSV = "../dados/queimadas_ma.csv"
+CAMINHO_CSV = "../data/queimadas_ma.csv"
 
 # Diretórios de saída
-DIR_RESULTADOS = "../resultados"
-DIR_GRAFICOS = os.path.join(DIR_RESULTADOS, "graficos")
+DIR_RESULTADOS = "../results"
+DIR_GRAFICOS = os.path.join(DIR_RESULTADOS, "graphs")
 
 os.makedirs(DIR_GRAFICOS, exist_ok=True)
 
