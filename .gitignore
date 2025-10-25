@@ -1,0 +1,39 @@
+# Ambiente virtual
+venv/
+.env/
+*.env
+
+# Arquivos de cache e compilação
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Logs e temporários
+*.log
+*.tmp
+*.bak
+
+# Arquivos de configuração locais
+*.ini
+*.cfg
+*.json
+.DS_Store
+
+# Dados brutos (caso não queira subir o CSV original)
+dados/
+# Se quiser versionar o CSV, remova a linha acima
+
+# Resultados e saídas
+resultados/
+*.png
+*.jpg
+*.jpeg
+
+# Arquivos de IDEs e editores
+.vscode/
+.idea/
+*.code-workspace
+
+# Arquivos de sistema
+Thumbs.db
+desktop.ini
