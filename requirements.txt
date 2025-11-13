@@ -1,8 +1,2 @@
-# Dependências principais para análise de dados e visualização
-pandas==2.2.3
-matplotlib==3.9.2
-seaborn==0.13.2
-
-# Dependências para o dashboard (opcional, mas já incluso para o próximo passo)
-streamlit==1.39.0
-plotly==5.24.1
+pandas
+streamlit
