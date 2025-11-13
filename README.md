@@ -1,8 +1,6 @@
 # Projet_DataBurn_v1.0.1
 
-## Análise de Big Data e Dashboard Streamlit
 
-Este projeto tem como objetivo realizar uma análise aprofundada de dados reais (Big Data) para identificar a causa raiz de um problema de negócio específico. O projeto utiliza Python para processamento de dados e o Streamlit para a criação de um dashboard interativo, permitindo que o time de front-end desenvolva o design e que os resultados da análise sejam visualizados de forma clara.
 
 ## Estrutura do Projeto
 
