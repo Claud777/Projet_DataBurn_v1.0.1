@@ -1,45 +1,65 @@
 import streamlit as st
 import pandas as pd
-import os
 
-# Configuração da página
+# Importando os módulos
+from modules.data_loader import load_multiple_years
+from modules.utils import formatar_numero
+from modules.ui import create_sidebar, filter_dataframe
+
+# Configuração da Página
 st.set_page_config(
-    page_title="DataBurn Analysis Dashboard",
+    page_title="Dados de Monitoramento - DataBurn",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Título principal
-st.title("🔥 DataBurn: Análise de Big Data")
+# Sidebar e Carregamento
+anos_selecionados = create_sidebar()
 
-st.markdown("""
-Esta é a estrutura inicial do dashboard para a análise de Big Data.
-O objetivo é apresentar os dados obtidos e identificar as causas de um problema específico.
-O time de front-end pode usar esta estrutura para desenvolver o design.
-""")
+if anos_selecionados:
+    df_raw = load_multiple_years(anos_selecionados)
+else:
+    df_raw = None
 
-# Carregar dados de exemplo (usando o primeiro arquivo encontrado)
-data_path = "data/db_2020/dados_2020.csv"
-try:
-    if os.path.exists(data_path):
-        df = pd.read_csv(data_path)
-        st.header("Amostra de Dados (2020)")
-        st.dataframe(df.head())
-    else:
-        st.warning(f"Arquivo de dados não encontrado: {data_path}")
-except Exception as e:
-    st.error(f"Erro ao carregar os dados: {e}")
+# Corpo Principal
+st.title("DataBurn: Painel de Monitoramento")
 
-# Seção para a análise
-st.header("Resultados da Análise")
-st.info("Esta seção será preenchida com gráficos, métricas e a conclusão da análise para identificar a causa do problema.")
+if df_raw is not None:
+    # Mapeamento (Lembra de manter os nomes corretos que ajustaste antes)
+    col_estado = 'Estado'      
+    col_cidade = 'Municipio'    
+    col_fogo = 'RiscoFogo'     
+    col_chuva = 'Precipitacao'  
 
-# Placeholder para o time de front-end
-st.sidebar.title("Configurações e Filtros")
-st.sidebar.markdown("Use esta barra lateral para adicionar filtros de data, região, etc.")
+    # Aplica filtros (Função que veio do modules/ui.py)
+    df_filtered = filter_dataframe(df_raw, col_estado, col_cidade)
 
-st.sidebar.header("Status do Projeto")
-st.sidebar.metric("Dados Carregados", "Sim")
-st.sidebar.metric("Estrutura Streamlit", "Pronta")
+    # KPIs
+    st.subheader(f"Análise Consolidada ({', '.join(map(str, anos_selecionados))})")
+    
+    kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+    
+    # Cálculos
+    media_fogo = df_filtered[col_fogo].mean() if col_fogo in df_filtered.columns else 0
+    total_chuva = df_filtered[col_chuva].sum() if col_chuva in df_filtered.columns else 0
+    cidades_unicas = df_filtered[col_cidade].nunique() if col_cidade in df_filtered.columns else 0
+    
+    # Exibição
+    kpi1.metric("Registros Analisados", formatar_numero(len(df_filtered)))
+    kpi2.metric("Média Risco de Fogo", formatar_numero(media_fogo, 2))
+    kpi3.metric("Precipitação Total", formatar_numero(total_chuva, 2))
+    kpi4.metric("Cidades Atingidas", cidades_unicas)
 
-st.caption("Desenvolvido para o projeto DataBurn.")
+    st.markdown("---")
+
+    # --- Tabela ---
+    st.subheader("Base de Dados Filtrada")
+    st.dataframe(df_filtered.head(50), use_container_width=True)
+
+    # --- Rodapé Técnico ---
+    st.markdown("---")
+    with st.expander("🔧 Detalhes Técnicos (Dev Only)"):
+        st.write(df_filtered.dtypes)
+
+else:
+    st.info("Selecione um ano para começar.")
