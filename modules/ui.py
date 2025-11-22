@@ -3,15 +3,22 @@ import streamlit as st
 def create_sidebar():
     """Cria a sidebar e retorna os anos selecionados"""
     st.sidebar.title("Filtros para análise")
-    
-    anos_disponiveis = [2020, 2021, 2022, 2023, 2024, 2025]
-    anos_selecionados = st.sidebar.multiselect(
-        "Selecione os Anos:", 
-        options=anos_disponiveis, 
-        default=[2020]
-    )
-    return anos_selecionados
 
+    anos_disponiveis = [2020, 2021, 2022, 2023, 2024, 2025]
+
+    selecionar_todos = st.sidebar.checkbox("Selecionar Todos os Anos", value=True)
+    
+    if selecionar_todos:
+        anos_selecionados = anos_disponiveis
+        st.sidebar.info("Visualizando dados de 2020 a 2025.")
+    else:
+        anos_selecionados = st.sidebar.multiselect(
+            "Selecione os Anos:", 
+            options=anos_disponiveis, 
+            default=[2024]
+        )
+        
+    return anos_selecionados
 def filter_dataframe(df, col_estado, col_cidade):
     """Aplica os filtros de Estado e Cidade e retorna o DF filtrado"""
     st.sidebar.markdown("---")
