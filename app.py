@@ -1,10 +1,9 @@
 import streamlit as st
 import pandas as pd
 
+# Importações dos módulos atualizados
 from modules.data_loader import load_multiple_years
-from modules.utils import formatar_numero
 from modules.ui import create_sidebar, filter_dataframe
-# Importação completa das funções gráficas
 from modules.graphs import (
     plot_line_evolution, 
     plot_bar_ranking, 
@@ -13,10 +12,12 @@ from modules.graphs import (
     plot_biome_distribution
 )
 
-# Configuração da página
+# Configuração da página - tema claro
 st.set_page_config(page_title="DataBurn Dashboard", layout="wide")
+CURRENT_THEME = "plotly_white"
+CURRENT_MAP = "carto-positron"
 
-# Sidebar e Carregamento de Dados
+# sidebar e loading
 anos_selecionados = create_sidebar()
 
 if anos_selecionados:
@@ -24,144 +25,130 @@ if anos_selecionados:
 else:
     df_raw = None
 
-# Título Principal
-st.title("DataBurn: Painel de Monitoramento")
+# Título do Dashboard
+st.title("DataBurn: Painel de Monitoramento de Queimadas")
+st.markdown("---")
 
 if df_raw is not None:
-    # Tratamento de Datas e Meses
+    # TRATAMENTO DE DADOS
     mapa_meses = {
-        1: '01 - Janeiro', 2: '02 - Fevereiro', 3: '03 - Março', 4: '04 - Abril',
-        5: '05 - Maio', 6: '06 - Junho', 7: '07 - Julho', 8: '08 - Agosto',
-        9: '09 - Setembro', 10: '10 - Outubro', 11: '11 - Novembro', 12: '12 - Dezembro'
+        1: '01-Jan', 2: '02-Fev', 3: '03-Mar', 4: '04-Abr',
+        5: '05-Mai', 6: '06-Jun', 7: '07-Jul', 8: '08-Ago',
+        9: '09-Set', 10: '10-Out', 11: '11-Nov', 12: '12-Dez'
     }
-    
-    col_data_nome = 'DataHora' 
-    
-    if col_data_nome in df_raw.columns:
-        # Converte e extrai informações de data
-        df_raw[col_data_nome] = pd.to_datetime(df_raw[col_data_nome], errors='coerce')
-        df_raw['Ano'] = df_raw[col_data_nome].dt.year
-        df_raw['Mes_Num'] = df_raw[col_data_nome].dt.month
+    col_data = 'DataHora' 
+    if col_data in df_raw.columns:
+        df_raw[col_data] = pd.to_datetime(df_raw[col_data], errors='coerce')
+        df_raw['Ano'] = df_raw[col_data].dt.year
+        df_raw['Mes_Num'] = df_raw[col_data].dt.month
         df_raw['Mes_Nome'] = df_raw['Mes_Num'].map(mapa_meses)
     else:
         df_raw['Ano'] = df_raw['ano_origem']
         df_raw['Mes_Nome'] = 'N/A'
 
-    # Mapeamento de Colunas
-    col_estado = 'Estado'
-    col_cidade = 'Municipio'
-    col_fogo = 'RiscoFogo'
-    col_chuva = 'Precipitacao'
-
-    # Aplicação dos Filtros
+    col_estado = 'Estado'; col_cidade = 'Municipio'; col_fogo = 'RiscoFogo'; col_chuva = 'Precipitacao'
     df_filtered = filter_dataframe(df_raw, col_estado, col_cidade)
 
-    # Seção: Análise Temporal
-    st.subheader("Análise Temporal e Sazonalidade")
+    # BLOCO 1: ANÁLISE TEMPORAL
+    st.header("1. Comportamento Temporal")
     
-    # Seletor de visualização (Ano vs Mês)
-    tipo_visualizacao = st.radio(
-        "Agrupar dados por:", 
-        ["Ano", "Mês"], 
-        horizontal=True
-    )
+    # Configurações de Agrupamento
+    tipo_view = st.radio("Visualizar evolução por:", ["Ano", "Mês"], horizontal=True)
+    col_tempo = "Ano" if tipo_view == "Ano" else "Mes_Nome"
+    df_sorted = df_filtered.sort_values(by="Mes_Nome" if col_tempo == "Mes_Nome" else "Ano")
 
-    if tipo_visualizacao == "Ano":
-        col_tempo_grafico = "Ano"
-    else:
-        if 'Mes_Nome' in df_filtered.columns and df_filtered['Mes_Nome'].iloc[0] != 'N/A':
-            col_tempo_grafico = "Mes_Nome"
-        else:
-            col_tempo_grafico = "Ano"
+    # GRÁFICO 1.A: TENDÊNCIA (LINHA)
+    st.subheader("Tendência de Risco")
+    st.markdown("""
+    > **O que é:** Mostra a média do risco de fogo ao longo do tempo.  
+    > **Utilidade:** Permite identificar se a situação está piorando (linha subindo) ou melhorando (linha descendo) no período selecionado.
+    """)
+    if col_fogo in df_filtered.columns:
+        fig_evolu = plot_line_evolution(
+            df_sorted, x_col=col_tempo, y_col=col_fogo, 
+            title=f"Evolução da Média de Risco ({tipo_view})", 
+            template=CURRENT_THEME
+        )
+        st.plotly_chart(fig_evolu, use_container_width=True)
+    
+    st.divider()
 
-    col_evo, col_saz = st.columns(2)
-
-    with col_evo:
-        # Gráfico de Linha (Tendência Média)
-        if col_fogo in df_filtered.columns:
-            fig_evolu = plot_line_evolution(
-                df_filtered.sort_values(by="Mes_Nome" if col_tempo_grafico == "Mes_Nome" else "Ano"), 
-                x_col=col_tempo_grafico, 
-                y_col=col_fogo, 
-                title=f"Evolução Média do Risco ({tipo_visualizacao})",
-                color_hex="#FF4B4B"
-            )
-            st.plotly_chart(fig_evolu, use_container_width=True)
-
-    with col_saz:
-        # Gráfico de Volume Sazonal (Barras Coloridas)
-        if 'Mes_Nome' in df_filtered.columns and df_filtered['Mes_Nome'].iloc[0] != 'N/A':
-            # Ordena por mês para o gráfico ficar cronológico
-            df_sazonal = df_filtered.sort_values(by="Mes_Nome")
-            
-            fig_sazonal = plot_seasonal_volume(
-                df_sazonal,
-                time_col="Mes_Nome",
-                title="Volume Total de Queimadas por Mês",
-                color_seq="Reds" 
-            )
-            st.plotly_chart(fig_sazonal, use_container_width=True)
-        else:
-            st.info("Dados mensais não disponíveis para gerar análise sazonal.")
+    # GRÁFICO 1.B: VOLUME (SAZONALIDADE)
+    st.subheader("Volume Sazonal")
+    st.markdown("""
+    > **O que é:** Contagem total de focos de incêndio por período.  
+    > **Utilidade:** Revela os meses de pico, ajudando a planejar ações preventivas antes da época crítica.
+    """)
+    if 'Mes_Nome' in df_filtered.columns:
+        df_sazonal = df_filtered.sort_values(by="Mes_Nome")
+        fig_saz = plot_seasonal_volume(
+            df_sazonal, time_col="Mes_Nome", 
+            title="Total de Focos por Mês (Sazonalidade)", 
+            template=CURRENT_THEME
+        )
+        st.plotly_chart(fig_saz, use_container_width=True)
 
     st.markdown("---")
-    
-    # Seção: Rankings Top 10
-    col1, col2 = st.columns(2)
-    with col1:
-        if col_fogo in df_filtered.columns:
-            fig_fogo = plot_bar_ranking(
-                df_filtered,
-                cat_col=col_cidade,
-                val_col=col_fogo,
-                title="Top 10 Cidades - Risco Crítico (%)",
-                color_seq="Reds",
-                is_percent=True
-            )
-            st.plotly_chart(fig_fogo, use_container_width=True)
 
-    with col2:
+    # BLOCO 2: RANKINGS
+    st.header("2. Áreas Críticas (Rankings)")
+    st.markdown("Comparativo entre as cidades com maiores índices de risco versus precipitação (chuva).")
+
+    col_rank1, col_rank2 = st.columns(2)
+    
+    with col_rank1:
+        if col_fogo in df_filtered.columns:
+            fig_risk = plot_bar_ranking(
+                df_filtered, cat_col=col_cidade, val_col=col_fogo,
+                title="Top 10 Cidades: Risco de Fogo", 
+                color_seq="Reds", is_percent=True, template=CURRENT_THEME
+            )
+            st.plotly_chart(fig_risk, use_container_width=True)
+
+    with col_rank2:
         if col_chuva in df_filtered.columns:
-            fig_chuva = plot_bar_ranking(
-                df_filtered,
-                cat_col=col_cidade,
-                val_col=col_chuva,
-                title="Top 10 Cidades - Maior Precipitação (mm)",
-                color_seq="Blues",
-                is_percent=False
+            fig_rain = plot_bar_ranking(
+                df_filtered, cat_col=col_cidade, val_col=col_chuva,
+                title="Top 10 Cidades: Precipitação (Chuva)", 
+                color_seq="Blues", is_percent=False, template=CURRENT_THEME
             )
-            st.plotly_chart(fig_chuva, use_container_width=True)
+            st.plotly_chart(fig_rain, use_container_width=True)
 
     st.markdown("---")
+
+    # BLOCO 3: GEOESPACIAL E AMBIENTAL
+    st.header("3. Análise Geográfica e Ambiental")
     
-    # Seção: Análise Geoespacial e Ambiental
-    st.subheader("Análise Geoespacial e Ambiental")
-
-    # --- AQUI ESTAVA O ERRO: CORRIGIDO DE st.acolumns PARA st.columns ---
-    col_map, col_bio = st.columns([2, 1])
-
-    with col_map:
-        st.markdown("##### Densidade de Focos de Calor")
-        # Verifica se as colunas de lat/long existem
-        if 'Latitude' in df_filtered.columns and 'Longitude' in df_filtered.columns:
-            fig_map = plot_map_density(df_filtered, 'Latitude', 'Longitude')
-            st.plotly_chart(fig_map, use_container_width=True)
+    col_geo, col_bio = st.columns([2, 1])
+    
+    with col_geo:
+        st.subheader("Mapa de Calor")
+        st.markdown("""
+        **Utilidade:** Identifica visualmente as "Zonas Quentes" no território.  
+        """)
+        if 'Latitude' in df_filtered.columns:
+            # Gera o mapa PyDeck
+            deck_map = plot_map_density(
+                df_filtered, 'Latitude', 'Longitude'
+            )
+            st.pydeck_chart(deck_map, use_container_width=True)
         else:
-            st.warning("Coordenadas geográficas não encontradas para gerar o mapa.")
+            st.warning("Sem coordenadas GPS.")
 
     with col_bio:
-        st.markdown("##### Distribuição por Bioma")
-        # Verifica se a coluna Bioma existe
-        col_bioma = 'Bioma' 
-        if col_bioma in df_filtered.columns:
-            fig_bio = plot_biome_distribution(df_filtered, col_bioma)
+        st.subheader("Biomas Afetados")
+        st.markdown("""
+        **Utilidade:** Mostra qual ecossistema está sofrendo mais impacto proporcionalmente.
+        """)
+        if 'Bioma' in df_filtered.columns:
+            fig_bio = plot_biome_distribution(
+                df_filtered, 'Bioma', template=CURRENT_THEME
+            )
             st.plotly_chart(fig_bio, use_container_width=True)
-        else:
-            st.info("Dados de Bioma não disponíveis.")
 
-    # Visualização da Tabela Bruta
-    with st.expander("Visualização dados brutos filtrados"):
+    # TABELA FINAL
+    with st.expander("Ver Tabela de Dados Completa"):
         st.dataframe(df_filtered, use_container_width=True)
 
 else:
-    st.info("Selecione os dados na barra lateral.")
+    st.info("Por favor, selecione os anos na barra lateral para carregar os dados.")
