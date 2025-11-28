@@ -52,7 +52,7 @@ if df_raw is not None:
     # Tratamento de valores ausentes/inválidos na coluna RiscoFogo
     # O valor -999.0 é um placeholder comum para dados ausentes/inválidos.
     if col_fogo in df_raw.columns:
-        df_raw[col_fogo] = df_raw[col_fogo].replace(-999.0, pd.NA).astype('float')
+        df_raw[col_fogo] = df_raw[col_fogo].replace(-999.0, pd.NA).astype('Float64')
         
     df_filtered = filter_dataframe(df_raw, col_estado, col_cidade)
 
