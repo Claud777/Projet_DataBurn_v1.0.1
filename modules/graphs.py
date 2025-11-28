@@ -106,7 +106,7 @@ def plot_seasonal_volume(df, time_col, title, color_seq="Reds", template="plotly
     )
     return fig
 
-def plot_map_density(df, lat_col, lon_col, map_style=None):
+def plot_map_density(df, lat_col, lon_col, map_style=None, frp_min=1, frp_max=1):
     """
     Gera um mapa otimizado usando PyDeck (WebGL).
     Substituindo o Plotly Density para evitar estouro de memória.
@@ -119,9 +119,9 @@ def plot_map_density(df, lat_col, lon_col, map_style=None):
         data = df
 
     # Ajuste de peso (Intensidade)
-    if 'FRP' in data.columns:
-        data['FRP'] = data['FRP'].fillna(1) # Garante que não tem NaN
-    else:
+    # O tratamento de NaN/invalido foi movido para app.py.
+    # Garantindo que a coluna FRP exista para o PyDeck.
+    if 'FRP' not in data.columns:
         data['FRP'] = 1
 
     # Define o ponto inicial da câmera (Centralizado no Maranhão)

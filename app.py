@@ -126,23 +126,45 @@ if df_raw is not None:
     # BLOCO 3: GEOESPACIAL E AMBIENTAL
     st.header("3. Análise Geográfica e Ambiental")
     
-    col_geo, col_bio = st.columns([2, 1])
+	    col_geo, col_legenda, col_bio = st.columns([2, 0.5, 1])
     
     with col_geo:
         st.subheader("Mapa de Calor")
         st.markdown("""
         **Utilidade:** Identifica visualmente as "Zonas Quentes" no território.  
         """)
-        if 'Latitude' in df_filtered.columns:
-            # Gera o mapa PyDeck
-            deck_map = plot_map_density(
-                df_filtered, 'Latitude', 'Longitude'
-            )
-            st.pydeck_chart(deck_map, use_container_width=True)
-        else:
-            st.warning("Sem coordenadas GPS.")
-
-    with col_bio:
+	        if 'Latitude' in df_filtered.columns:
+	            # Calcula min/max de FRP para a legenda
+	            if 'FRP' in df_filtered.columns:
+	                frp_data = df_filtered['FRP'].dropna()
+	                frp_min = frp_data.min() if not frp_data.empty else 0
+	                frp_max = frp_data.max() if not frp_data.empty else 0
+	            else:
+	                frp_min = 0
+	                frp_max = 0
+	
+	            # Gera o mapa PyDeck
+	            deck_map = plot_map_density(
+	                df_filtered, 'Latitude', 'Longitude', frp_min=frp_min, frp_max=frp_max
+	            )
+	            st.pydeck_chart(deck_map, use_container_width=True)
+	        else:
+	            st.warning("Sem coordenadas GPS.")
+	
+	    with col_legenda:
+	        st.subheader("Intensidade")
+	        
+	        # Legenda Vertical Simples
+	        st.markdown(f"""
+	        <div style="display: flex; flex-direction: column; align-items: center; height: 300px; justify-content: space-between;">
+	            <div style="font-weight: bold; color: red;">ALTO ({frp_max:.1f})</div>
+	            <div style="width: 20px; height: 200px; background: linear-gradient(to top, yellow, orange, red); border: 1px solid #333;"></div>
+	            <div style="font-weight: bold; color: orange;">MÉDIO</div>
+	            <div style="font-weight: bold; color: yellow;">BAIXO ({frp_min:.1f})</div>
+	        </div>
+	        """, unsafe_allow_html=True)
+	
+	    with col_bio:
         st.subheader("Biomas Afetados")
         st.markdown("""
         **Utilidade:** Mostra qual ecossistema está sofrendo mais impacto proporcionalmente.
