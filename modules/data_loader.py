@@ -3,7 +3,7 @@ import pandas as pd
 import streamlit as st
 import os
 
-@st.cache_data
+@st.cache_data(show_spinner="Carregando dados...", ttl=3600)
 def load_multiple_years(years):
     """Carrega e concatena dados de múltiplos anos.
     Tenta vários padrões de caminho para encontrar o arquivo."""

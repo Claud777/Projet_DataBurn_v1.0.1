@@ -4,7 +4,7 @@ import pydeck as pdk
 import streamlit as st
 
 # Configuração Global de Fontes
-FONT_CONFIG = dict(family="Arial", size=14, color="#333333")
+FONT_CONFIG = dict(family="sans serif", size=14, color="#333333")
 
 def plot_line_evolution(df, x_col, y_col, title, color_hex="#E25822", template="plotly_white"):
     """Gera gráfico de linha"""
@@ -51,7 +51,7 @@ def plot_bar_ranking(df, cat_col, val_col, title, top_n=10, color_seq="Blues", i
     else:
         formato = '.2f'
 
-    df_top = df_grouped.sort_values(by=val_col, ascending=True).tail(top_n)
+    df_top = df_grouped.sort_values(by=val_col, ascending=False).head(top_n)
 
     fig = px.bar(
         df_top, x=val_col, y=cat_col, title=f"<b>{title}</b>",
