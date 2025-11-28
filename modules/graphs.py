@@ -51,7 +51,7 @@ def plot_bar_ranking(df, cat_col, val_col, title, top_n=10, color_seq="Blues", i
     else:
         formato = '.2f'
 
-    df_top = df_grouped.sort_values(by=val_col, ascending=True).tail(top_n)
+    df_top = df_grouped.sort_values(by=val_col, ascending=False).head(top_n)
 
     fig = px.bar(
         df_top, x=val_col, y=cat_col, title=f"<b>{title}</b>",

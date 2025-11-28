@@ -43,8 +43,10 @@ if df_raw is not None:
         df_raw['Mes_Num'] = df_raw[col_data].dt.month
         df_raw['Mes_Nome'] = df_raw['Mes_Num'].map(mapa_meses)
     else:
+        # A2: Melhorando o tratamento de data ausente
         df_raw['Ano'] = df_raw['ano_origem']
-        df_raw['Mes_Nome'] = 'N/A'
+        df_raw['Mes_Num'] = 0 # Valor numérico para evitar erros de tipo
+        df_raw['Mes_Nome'] = 'N/A' # Mantém N/A para visualização
 
     col_estado = 'Estado'; col_cidade = 'Municipio'; col_fogo = 'RiscoFogo'; col_chuva = 'Precipitacao'
     df_filtered = filter_dataframe(df_raw, col_estado, col_cidade)
@@ -55,7 +57,7 @@ if df_raw is not None:
     # Configurações de Agrupamento
     tipo_view = st.radio("Visualizar evolução por:", ["Ano", "Mês"], horizontal=True)
     col_tempo = "Ano" if tipo_view == "Ano" else "Mes_Nome"
-    df_sorted = df_filtered.sort_values(by="Mes_Nome" if col_tempo == "Mes_Nome" else "Ano")
+    # df_sorted removido: a ordenação e agrupamento são feitos dentro da função plot_line_evolution
 
     # GRÁFICO 1.A: TENDÊNCIA (LINHA)
     st.subheader("Tendência de Risco")
@@ -65,7 +67,7 @@ if df_raw is not None:
     """)
     if col_fogo in df_filtered.columns:
         fig_evolu = plot_line_evolution(
-            df_sorted, x_col=col_tempo, y_col=col_fogo, 
+            df_filtered, x_col=col_tempo, y_col=col_fogo, 
             title=f"Evolução da Média de Risco ({tipo_view})", 
             template=CURRENT_THEME
         )
@@ -80,9 +82,9 @@ if df_raw is not None:
     > **Utilidade:** Revela os meses de pico, ajudando a planejar ações preventivas antes da época crítica.
     """)
     if 'Mes_Nome' in df_filtered.columns:
-        df_sazonal = df_filtered.sort_values(by="Mes_Nome")
+        # Removendo ordenação redundante (df_sazonal)
         fig_saz = plot_seasonal_volume(
-            df_sazonal, time_col="Mes_Nome", 
+            df_filtered, time_col="Mes_Nome", 
             title="Total de Focos por Mês (Sazonalidade)", 
             template=CURRENT_THEME
         )
